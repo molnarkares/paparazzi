@@ -26,7 +26,7 @@ Q=@
 
 OCAMLC=ocamlfind ocamlc
 OCAMLOPT=ocamlfind ocamlopt
-OCAMLDEP=ocamldep
+OCAMLDEP=ocamlfind ocamldep
 OCAMLLEX=ocamllex
 OCAMLYACC=ocamlyacc
 OCAMLMKLIB=ocamlmklib
@@ -36,22 +36,18 @@ OCAMLLIBDIR=$(shell $(OCAMLC) -where)
 #VERBOSITY = -verbose
 VERBOSITY =
 
-LBITS := $(shell getconf LONG_BIT)
-ifeq ($(LBITS),64)
-  FPIC = -ccopt -fPIC
-else
-  FPIC =
-endif
-
 UNAME = $(shell uname -s)
 ifeq ("$(UNAME)","Darwin")
 	MKTEMP = gmktemp
-	LABLGTK2GNOMECANVAS = lablgtk2.gnomecanvas
-	METAFILE = META.pprz.osx
 else
 	MKTEMP = mktemp
-	LABLGTK2GNOMECANVAS = lablgtk2-gnome.gnomecanvas
-	METAFILE = META.pprz.deb
+endif
+
+LABLGTK2GNOMECANVAS = $(shell ocamlfind query -p-format lablgtk2-gnome.gnomecanvas 2>/dev/null)
+METAFILE = META.pprz.deb
+ifeq ($(LABLGTK2GNOMECANVAS),)
+LABLGTK2GNOMECANVAS = $(shell ocamlfind query -p-format lablgtk2.gnomecanvas 2>/dev/null)
+METAFILE = META.pprz.osx
 endif
 
 INCLUDES=
@@ -66,6 +62,9 @@ CMX = $(SRC:.ml=.cmx)
 XSRC = gtk_tools.ml platform.ml wind_sock.ml gtk_papget_editor.ml gtk_papget_text_editor.ml gtk_papget_gauge_editor.ml gtk_papget_led_editor.ml papget_common.ml papget_renderer.ml papget.ml mapCanvas.ml mapWaypoints.ml mapTrack.ml mapGoogle.ml mapIGN.ml ml_gtk_drag.o xmlEdit.ml mapFP.ml
 XCMO = $(XSRC:.ml=.cmo)
 XCMX = $(XSRC:.ml=.cmx)
+
+# files to generate before running ocamldep
+GEN_DEP = expr_parser.ml expr_lexer.ml
 
 TESTS_SRC = test/test_latlong.ml
 TESTS_CMO = $(TESTS_SRC:.ml=.cmo)
@@ -106,7 +105,7 @@ tests : lib-pprz.cma $(TESTS_CMO)
 
 %.o : %.c
 	@echo OC $<
-	$(Q)$(OCAMLC) $(FPIC) $(INCLUDES) -package $(PKGCOMMON) -c $<
+	$(Q)$(OCAMLC) -ccopt -fPIC $(INCLUDES) -package $(PKGCOMMON) -c $<
 
 $(XCMO) $(XCMX) myGtkInit.cmo : PKGCOMMON=$(XPKGCOMMON)
 
@@ -145,15 +144,6 @@ caml_from_c_example : cserial.o convert.o caml_from_c_example.o camltm.o
 %.ml %.mli : %.mly
 	@echo OCY $<
 	$(Q)$(OCAMLYACC) $<
-
-# dependencies not covered by ocamldep
-# since these files are generated
-expr_parser.cmo expr_parser.cmx : expr_parser.cmi expr_syntax.cmi
-expr_parser.cmi : expr_parser.ml expr_syntax.cmi
-expr_lexer.ml : expr_parser.ml
-expr_lexer.cmi : expr_lexer.ml expr_syntax.cmi
-expr_lexer.cmo : expr_lexer.cmi
-expr_syntax.cmo : expr_syntax.cmi
 
 gtk_papget_editor.ml : widgets.glade
 	@echo GLADE $@
@@ -196,7 +186,7 @@ clean :
 # Dependencies
 #
 
-.depend: Makefile
+.depend: Makefile $(GEN_DEP)
 	$(OCAMLDEP) *.ml* > .depend
 
 ifneq ($(MAKECMDGOALS),clean)
