@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2009-2011 The Paparazzi Team
+ *
+ * Copyright (C) 2009-2013 The Paparazzi Team
  *
  * This file is part of paparazzi.
  *
@@ -19,59 +20,44 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/**
- * @file arch/stm32/mcu_periph/sys_time_arch.c
- * @ingroup stm32_arch
- *
- * STM32 timing functions.
- *
+/** @file arch/omap/mcu_periph/sys_time_arch.h
+ * omap timing functions
  */
 
 #include "mcu_periph/sys_time.h"
+#include <sys/time.h>
+#include <signal.h>
+#include <string.h>
 
-#include "libopencm3/cm3/systick.h"
-
-#ifdef SYS_TIME_LED
-#include "led.h"
-#endif
-
-void sys_tick_handler(void);
-
-/** Initialize SysTick.
- * Generate SysTick interrupt every sys_time.resolution_cpu_ticks
- */
 void sys_time_arch_init( void ) {
-  /* run cortex systick timer with 72MHz */
-  systick_set_clocksource(STK_CTRL_CLKSOURCE_AHB);
-  sys_time.cpu_ticks_per_sec = AHB_CLK;
 
-  /* cpu ticks per desired sys_time timer step */
+  sys_time.cpu_ticks_per_sec = 1e6;
   sys_time.resolution_cpu_ticks = (uint32_t)(sys_time.resolution * sys_time.cpu_ticks_per_sec + 0.5);
 
-  /* The timer interrupt is activated on the transition from 1 to 0,
-   * therefore it activates every n+1 clock ticks.
-   */
-  systick_set_reload(sys_time.resolution_cpu_ticks-1);
+  struct sigaction sa;
+  struct itimerval timer;
 
-  systick_interrupt_enable();
-  systick_counter_enable();
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = &sys_tick_handler;
+  sigaction(SIGALRM, &sa, NULL);
+
+  // timer expires after sys_time.resolution sec
+  timer.it_value.tv_sec = 0;
+  timer.it_value.tv_usec = USEC_OF_SEC(sys_time.resolution);
+  // and every SYS_TIME_RESOLUTION sec after that
+  timer.it_interval.tv_sec = 0;
+  timer.it_interval.tv_usec = USEC_OF_SEC(sys_time.resolution);
+
+  setitimer(ITIMER_REAL, &timer, NULL);
 }
 
+void sys_tick_handler( int signum ) {
 
-// FIXME : nb_tick rollover ???
-//
-// 97 days at 512hz
-// 12 hours at 100khz
-//
-void sys_tick_handler(void) {
   sys_time.nb_tick++;
-  sys_time.nb_sec_rem += sys_time.resolution_cpu_ticks;
+  sys_time.nb_sec_rem += sys_time.resolution_cpu_ticks;;
   if (sys_time.nb_sec_rem >= sys_time.cpu_ticks_per_sec) {
     sys_time.nb_sec_rem -= sys_time.cpu_ticks_per_sec;
     sys_time.nb_sec++;
-#ifdef SYS_TIME_LED
-    LED_TOGGLE(SYS_TIME_LED);
-#endif
   }
   for (unsigned int i=0; i<SYS_TIME_NB_TIMER; i++) {
     if (sys_time.timer[i].in_use &&
