@@ -3,7 +3,7 @@
 
 #define BOARD_KROOZ
 
-/* Krooz/M has a 12MHz external clock and 168MHz internal. */
+/* KroozSD has a 12MHz external clock and 168MHz internal. */
 #define EXT_CLK 12000000
 #define AHB_CLK 168000000
 
@@ -210,7 +210,6 @@
 #define BOARD_HAS_BARO 1
 
 /* PWM */
-#define PWM_USE_TIM2 1
 #define PWM_USE_TIM3 1
 #define PWM_USE_TIM4 1
 #define PWM_USE_TIM5 1
@@ -227,7 +226,12 @@
 #define USE_PWM9 1
 //#define USE_PWM10 1
 
+#if USE_PWM10
+#define ACTUATORS_PWM_NB 11
+#define PWM_USE_TIM2 1
+#else
 #define ACTUATORS_PWM_NB 10
+#endif
 
 // PWM_SERVO_x is the index of the servo in the actuators_pwm_values array
 #if USE_PWM0
@@ -383,11 +387,11 @@
 #define USE_PPM_TIM2 1
 
 #define PPM_CHANNEL         TIM_IC2
-#define PPM_TIMER_INPUT     TIM_IC_IN_TI1
+#define PPM_TIMER_INPUT     TIM_IC_IN_TI2
 #define PPM_IRQ             NVIC_TIM2_IRQ
 //#define PPM_IRQ2            NVIC_TIM2_UP_TIM10_IRQ
 // Capture/Compare InteruptEnable and InterruptFlag
-#define PPM_CC_EN           TIM_DIER_CC2IE
+#define PPM_CC_IE           TIM_DIER_CC2IE
 #define PPM_CC_IF           TIM_SR_CC2IF
 #define PPM_GPIO_PORT       GPIOB
 #define PPM_GPIO_PIN        GPIO3
@@ -397,7 +401,7 @@
  * Spektrum
  */
 /* The line that is pulled low at power up to initiate the bind process */
-#define SPEKTRUM_BIND_PIN GPIO8
+#define SPEKTRUM_BIND_PIN GPIO9
 #define SPEKTRUM_BIND_PIN_PORT GPIOA
 
 #endif /* CONFIG_KROOZ_1_0_H */
