@@ -1,48 +1,40 @@
-<!DOCTYPE airframe SYSTEM "../../airframe.dtd">
+<!DOCTYPE airframe SYSTEM "../../../airframe.dtd">
 
-<!--
-     Eternity 1
-     designed by Murat Bronz
-     Umarim-Lite
-     Radiotronix modem
-     LEA 6H GPS
--->
-
-<airframe name="Eternity 1">
+<airframe name="KroozSD fixedwing example">
 
   <modules>
   </modules>
 
   <firmware name="fixedwing">
-    <target name="ap" board="umarim_lite_2.0"/>
+    <target name="ap" board="krooz_sd"/>
     <target name="sim" board="pc"/>
 
     <define name="LOITER_TRIM"/>
     <define name="ALT_KALMAN"/>
     <define name="AGR_CLIMB"/>
-    <define name="USE_I2C0"/>
-    <define name="USE_I2C1"/>
 
     <subsystem name="radio_control" type="ppm"/>
     <subsystem name="telemetry" type="transparent"/>
-    <subsystem name="imu" type="umarim"/>
-    <subsystem name="ahrs" type="float_dcm"/>
+    <subsystem name="imu" type="krooz_sd"/>
+    <subsystem name="ahrs" type="float_dcm">
+      <define name="USE_HIGH_ACCEL_FLAG"/>
+      <define name="KROOZ_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_500"/>
+      <configure name="AHRS_PROPAGATE_FREQUENCY" value="60"/>
+    </subsystem>
     <subsystem name="ins"     type="alt_float"/>
     <subsystem name="control"/>
     <subsystem name="gps" type="ublox"/>
     <subsystem name="navigation"/>
-    <subsystem name="current_sensor">
-      <configure name="ADC_CURRENT_SENSOR" value="ADC_0"/>
-    </subsystem>
+    <subsystem name="actuators"     type="pwm"/>
 
   </firmware>
 
 <!-- commands section -->
-  <servos>
-    <servo name="MOTOR" no="5" min="1100" neutral="1100" max="1900"/>
-    <servo name="ELEVATOR" no="0" min="1200" neutral="1430" max="1800"/>
+  <servos driver="Pwm">
+    <servo name="MOTOR" no="4" min="1100" neutral="1100" max="1900"/>
+    <servo name="ELEVATOR" no="3" min="1200" neutral="1430" max="1800"/>
     <servo name="RUDDER" no="1" min="1200" neutral="1619" max="2000"/>
-    <servo name="AILERON_RIGHT" no="3" max="1800" neutral="1521" min="1200"/>
+    <servo name="AILERON_RIGHT" no="0" max="1800" neutral="1521" min="1200"/>
     <servo name="AILERON_LEFT" no="2" max="1800" neutral="1480" min="1200"/>
   </servos>
 
@@ -79,30 +71,35 @@
   </section>
 
   <section name="IMU" prefix="IMU_">
-    <!-- Calibration Neutral -->
-    <define name="GYRO_P_NEUTRAL" value="21"/>
-    <define name="GYRO_Q_NEUTRAL" value="21"/>
-    <define name="GYRO_R_NEUTRAL" value="5"/>
+    <!-- replace this with your own calibration -->
+    <define name="GYRO_P_NEUTRAL" value="0"/>
+    <define name="GYRO_Q_NEUTRAL" value="0"/>
+    <define name="GYRO_R_NEUTRAL" value="0"/>
+    <define name="GYRO_P_SENS" value="1.0908" integer="16"/>
+    <define name="GYRO_Q_SENS" value="1.0908" integer="16"/>
+    <define name="GYRO_R_SENS" value="1.0908" integer="16"/>
 
-    <define name="GYRO_P_SENS" value="5.072800" integer="16"/>
-    <define name="GYRO_Q_SENS" value="5.080519" integer="16"/>
-    <define name="GYRO_R_SENS" value="4.993218" integer="16"/>
+    <define name="ACCEL_X_NEUTRAL" value="-48"/>
+    <define name="ACCEL_Y_NEUTRAL" value="86"/>
+    <define name="ACCEL_Z_NEUTRAL" value="-479"/>
+    <define name="ACCEL_X_SENS" value="0.6131" integer="16"/>
+    <define name="ACCEL_Y_SENS" value="0.6131" integer="16"/>
+    <define name="ACCEL_Z_SENS" value="0.6131" integer="16"/>
 
-    <define name="ACCEL_X_NEUTRAL" value="-1"/>
-    <define name="ACCEL_Y_NEUTRAL" value="-6"/>
-    <define name="ACCEL_Z_NEUTRAL" value="-18"/>
+    <define name="MAG_X_NEUTRAL" value="-282"/>
+    <define name="MAG_Y_NEUTRAL" value="-78"/>
+    <define name="MAG_Z_NEUTRAL" value="109"/>
+    <define name="MAG_X_SENS" value="3.33430456557" integer="16"/>
+    <define name="MAG_Y_SENS" value="3.53180739126" integer="16"/>
+    <define name="MAG_Z_SENS" value="3.68297143457" integer="16"/>
 
-    <define name="ACCEL_X_SENS" value="38.8426913974" integer="16"/>
-    <define name="ACCEL_Y_SENS" value="38.743860704" integer="16"/>
-    <define name="ACCEL_Z_SENS" value="39.5046247859" integer="16"/>
-
-    <define name="BODY_TO_IMU_PHI" value="0"/>
-    <define name="BODY_TO_IMU_THETA" value="0"/>
-    <define name="BODY_TO_IMU_PSI" value="0"/>
+    <define name="BODY_TO_IMU_PHI"   value="0." unit="deg"/>
+    <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/>
+    <define name="BODY_TO_IMU_PSI"   value="0." unit="deg"/>
   </section>
 
   <section name="INS" prefix="INS_">
-    <define name="ROLL_NEUTRAL_DEFAULT" value="0.0959929972887" unit="rad"/>
+    <define name="ROLL_NEUTRAL_DEFAULT" value="0." unit="rad"/>
     <define name="PITCH_NEUTRAL_DEFAULT" value="0." unit="rad"/>
   </section>
 
