@@ -97,9 +97,9 @@ if __name__ == "__main__":
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose")
     parser.add_option("--product", type="choice", choices=["any", "Lisa/Lia"],
-                      action="store", default="Lisa/Lia",
+                      action="store", default="any",
                       help="only upload to device where idProduct contains PRODUCT\n"
-                      "choices: (any, Lisa/Lia), default: Lisa/Lia")
+                      "choices: (any, Lisa/Lia), default: any")
     parser.add_option("--addr", type="int", action="store", dest="addr", default=APP_ADDRESS,
                       help="Upload start address (default: 0x08002000)")
     parser.add_option("-n", "--dry-run", action="store_true",
@@ -137,6 +137,7 @@ if __name__ == "__main__":
     valid_manufacturers.append("STMicroelectronics")
     valid_manufacturers.append("Black Sphere Technologies")
     valid_manufacturers.append("TUDelft MavLab. 2012->13")
+    valid_manufacturers.append("Lyorak")
 
     # list of tuples with possible stm32 (autopilot) devices
     stm32devs = []
