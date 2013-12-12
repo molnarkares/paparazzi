@@ -20,7 +20,7 @@
  */
 
 /**
- * @file modules/sensors/baro_mpl3155.c
+ * @file modules/sensors/baro_mpl3115.c
  *
  * Module for the baro MPL3115A2 from Freescale (i2c)
  *
@@ -35,9 +35,6 @@
 #include "messages.h"
 #include "subsystems/datalink/downlink.h"
 
-#ifndef DOWNLINK_DEVICE
-#define DOWNLINK_DEVICE DOWNLINK_AP_DEVICE
-#endif
 
 #ifndef BARO_MPL3115_I2C_DEV
 #define BARO_MPL3115_I2C_DEV i2c0

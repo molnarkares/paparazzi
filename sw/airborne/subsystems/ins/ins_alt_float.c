@@ -39,7 +39,7 @@
 
 #ifdef DEBUG_ALT_KALMAN
 #include "mcu_periph/uart.h"
-#include "ap_downlink.h"
+#include "subsystems/datalink/downlink.h"
 #endif
 
 /* vertical position and speed in meters (z-up)*/
@@ -47,6 +47,7 @@ float ins_alt;
 float ins_alt_dot;
 
 #if USE_BAROMETER
+PRINT_CONFIG_MSG("USE_BAROMETER is TRUE: Using baro for altitude estimation.")
 #include "subsystems/sensors/baro.h"
 #include "math/pprz_isa.h"
 float ins_qfe;
