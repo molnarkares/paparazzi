@@ -55,8 +55,8 @@
 #endif
 #include "subsystems/air_data.h"
 #if USE_BARO_BOARD
-PRINT_CONFIG_MSG("USE_BARO_BOARD is TRUE: Reading onboard baro.")
 #include "subsystems/sensors/baro.h"
+PRINT_CONFIG_MSG_VALUE("USE_BARO_BOARD is TRUE, reading onboard baro: ", BARO_BOARD)
 #endif
 #include "subsystems/ins.h"
 
@@ -66,7 +66,7 @@ PRINT_CONFIG_MSG("USE_BARO_BOARD is TRUE: Reading onboard baro.")
 #include "firmwares/fixedwing/autopilot.h"
 #include "firmwares/fixedwing/stabilization/stabilization_attitude.h"
 #include CTRL_TYPE_H
-#include "subsystems/nav.h"
+#include "firmwares/fixedwing/nav.h"
 #include "generated/flight_plan.h"
 #ifdef TRAFFIC_INFO
 #include "subsystems/navigation/traffic_info.h"
@@ -420,13 +420,17 @@ static inline void telecommand_task( void ) {
 
   vsupply = fbw_state->vsupply;
   current = fbw_state->current;
+  energy = fbw_state->energy;
 
 #ifdef RADIO_CONTROL
+  /* the SITL check is a hack to prevent "automatic" launch in NPS */
+#ifndef SITL
   if (!autopilot_flight_time) {
     if (pprz_mode == PPRZ_MODE_AUTO2 && fbw_state->channels[RADIO_THROTTLE] > THROTTLE_THRESHOLD_TAKEOFF) {
       launch = TRUE;
     }
   }
+#endif
 #endif
 }
 
@@ -454,7 +458,7 @@ void reporting_task( void ) {
 
 
 #ifdef FAILSAFE_DELAY_WITHOUT_GPS
-#define GpsTimeoutError (sys_time.nb_sec - gps.last_fix_time > FAILSAFE_DELAY_WITHOUT_GPS)
+#define GpsTimeoutError (sys_time.nb_sec - gps.last_3dfix_time > FAILSAFE_DELAY_WITHOUT_GPS)
 #endif
 
 /**
@@ -517,7 +521,6 @@ void navigation_task( void ) {
 
     // climb_loop(); //4Hz
   }
-  energy += ((float)current) / 3600.0f * 0.25f;	// mAh = mA * dt (4Hz -> hours)
 }
 
 
@@ -596,14 +599,22 @@ void sensors_task( void ) {
   baro_periodic();
 #endif
 
+#if USE_GPS
+  gps_periodic_check();
+#endif
+
   ins_periodic();
 }
 
 
+#ifdef LOW_BATTERY_KILL_DELAY
+#warning LOW_BATTERY_KILL_DELAY has been renamed to CATASTROPHIC_BAT_KILL_DELAY, please update your airframe file!
+#endif
 
-
-/** Maximum time allowed for low battery level before going into kill mode */
-#define LOW_BATTERY_DELAY 5
+/** Maximum time allowed for catastrophic battery level before going into kill mode */
+#ifndef CATASTROPHIC_BAT_KILL_DELAY
+#define CATASTROPHIC_BAT_KILL_DELAY 5
+#endif
 
 /** Maximum distance from HOME waypoint before going into kill mode */
 #ifndef KILL_MODE_DISTANCE
@@ -626,7 +637,7 @@ void monitor_task( void ) {
     t++;
   else
     t = 0;
-  kill_throttle |= (t >= LOW_BATTERY_DELAY);
+  kill_throttle |= (t >= CATASTROPHIC_BAT_KILL_DELAY);
   kill_throttle |= launch && (dist2_to_home > Square(KILL_MODE_DISTANCE));
 
   if (!autopilot_flight_time &&
@@ -644,7 +655,7 @@ void monitor_task( void ) {
 void event_task_ap( void ) {
 
 #ifndef SINGLE_MCU
-#if defined USE_I2C0  || defined USE_I2C1  || defined USE_I2C2
+#if USE_I2C0  || USE_I2C1  || USE_I2C2
   i2c_event();
 #endif
 #endif

@@ -40,7 +40,7 @@
 #include "state.h"
 #include "subsystems/datalink/downlink.h"
 #include "modules/nav/nav_catapult.h"
-#include "subsystems/nav.h"
+#include "firmwares/fixedwing/nav.h"
 #include "generated/flight_plan.h"
 #include "firmwares/fixedwing/autopilot.h"
 #include "firmwares/fixedwing/stabilization/stabilization_attitude.h"
@@ -109,7 +109,8 @@ void nav_catapult_highrate_module(void)
       // Five consecutive measurements > 1.5
 #ifndef SITL
       struct Int32Vect3 accel_meas_body;
-      INT32_RMAT_TRANSP_VMULT(accel_meas_body, imu.body_to_imu_rmat, imu.accel);
+      struct Int32RMat *body_to_imu_rmat = orientationGetRMat_i(&imu.body_to_imu);
+      INT32_RMAT_TRANSP_VMULT(accel_meas_body, *body_to_imu_rmat, imu.accel);
       if (ACCEL_FLOAT_OF_BFP(accel_meas_body.x)  < (nav_catapult_acceleration_threshold * 9.81))
 #else
       if (launch != 1)
@@ -135,7 +136,7 @@ void nav_catapult_highrate_module(void)
 //###############################################################################################
 // Code that runs in 4Hz Nav
 
-bool_t nav_catapult_init(void)
+bool_t nav_catapult_setup(void)
 {
 
   nav_catapult_armed = TRUE;
@@ -146,7 +147,7 @@ bool_t nav_catapult_init(void)
 
 
 
-bool_t nav_catapult(uint8_t _to, uint8_t _climb)
+bool_t nav_catapult_run(uint8_t _to, uint8_t _climb)
 {
   float alt = WaypointAlt(_climb);
 
@@ -160,13 +161,13 @@ bool_t nav_catapult(uint8_t _to, uint8_t _climb)
     NavVerticalThrottleMode(9600*(0));
 
 
-    // Store take-off waypoint
-    WaypointX(_to) = GetPosX();
-    WaypointY(_to) = GetPosY();
-    WaypointAlt(_to) = GetPosAlt();
-
     nav_catapult_x = stateGetPositionEnu_f()->x;
     nav_catapult_y = stateGetPositionEnu_f()->y;
+
+    // Store take-off waypoint
+    WaypointX(_to) = nav_catapult_x;
+    WaypointY(_to) = nav_catapult_y;
+    WaypointAlt(_to) = stateGetPositionUtm_f()->alt;
 
   }
   // No Roll, Climb Pitch, Full Power
@@ -206,9 +207,9 @@ return TRUE;
 
 bool_t nav_select_touch_down(uint8_t _td)
 {
-  WaypointX(_td) = GetPosX();
-  WaypointY(_td) = GetPosY();
-  WaypointAlt(_td) = GetPosAlt();
+  WaypointX(_td) = stateGetPositionEnu_f()->x;
+  WaypointY(_td) = stateGetPositionEnu_f()->y;
+  WaypointAlt(_td) = stateGetPositionUtm_f()->alt;
   return FALSE;
 }
 

@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include "paparazzi.h"
+#include "led.h"
 #include "mcu_periph/spi.h"
 #include "mcu_periph/sys_time.h"
 #include "mcu_periph/gpio.h"
@@ -173,7 +174,7 @@ static const uint8_t pn_codes[5][9][8] = {
 };
 static const uint8_t pn_bind[] = { 0x98, 0x88, 0x1B, 0xE4, 0x30, 0x79, 0x03, 0x84 };
 
-#if DOWNLINK
+#if PERIODIC_TELEMETRY
 #include "subsystems/datalink/telemetry.h"
 
 static void send_superbit(void) {
@@ -219,7 +220,7 @@ void superbitrf_init(void) {
   // Initialize the cyrf6936 chip
   cyrf6936_init(&superbitrf.cyrf6936, &(SUPERBITRF_SPI_DEV), 2, SUPERBITRF_RST_PORT, SUPERBITRF_RST_PIN);
 
-#if DOWNLINK
+#if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, "SUPERBIT", send_superbit);
 #endif
 }
@@ -231,6 +232,10 @@ void superbitrf_event(void) {
   uint8_t i, pn_row, data_code[16];
   static uint8_t packet_size, tx_packet[16];
   static bool_t start_transfer = TRUE;
+
+#ifdef RADIO_CONTROL_LED
+  static uint32_t slowLedCpt = 0;
+#endif
 
   // Check if the cyrf6936 isn't busy and the uperbitrf is initialized
   if(superbitrf.cyrf6936.status != CYRF6936_IDLE)
@@ -322,6 +327,16 @@ void superbitrf_event(void) {
 
   /* When the superbitrf is in binding mode */
   case SUPERBITRF_BINDING:
+
+#ifdef RADIO_CONTROL_LED
+    slowLedCpt++;
+    if(slowLedCpt>100000){
+
+      LED_TOGGLE(RADIO_CONTROL_LED);
+      slowLedCpt = 0;
+    }
+#endif
+
     /* Switch the different states */
     switch (superbitrf.state) {
     case 0:
@@ -396,6 +411,16 @@ void superbitrf_event(void) {
   /* When the receiver is synchronizing with the transmitter */
   case SUPERBITRF_SYNCING_A:
   case SUPERBITRF_SYNCING_B:
+
+#ifdef RADIO_CONTROL_LED
+    slowLedCpt++;
+    if(slowLedCpt>5000){
+
+      LED_TOGGLE(RADIO_CONTROL_LED);
+      slowLedCpt = 0;
+    }
+#endif
+
     /* Switch the different states */
     switch (superbitrf.state) {
     case 0:
@@ -499,6 +524,11 @@ void superbitrf_event(void) {
 
   /* Normal transfer mode */
   case SUPERBITRF_TRANSFER:
+
+#ifdef RADIO_CONTROL_LED
+    LED_ON(RADIO_CONTROL_LED);
+#endif
+
     /* Switch the different states */
     switch (superbitrf.state) {
     case 0:
@@ -899,7 +929,7 @@ static inline void superbitrf_receive_packet_cb(bool_t error, uint8_t status, ui
   }
 }
 
-static inline void superbitrf_send_packet_cb(bool_t error) {
+static inline void superbitrf_send_packet_cb(bool_t error __attribute__((unused))) {
   /* Switch on the status of the superbitRF */
   switch (superbitrf.status) {
 

@@ -83,11 +83,11 @@ struct FloatEulers {
 
 /**
  * @brief angular rates
- * @details Units: rad/s^2 */
+ * @details Units: rad/s */
 struct FloatRates {
-  float p; ///< in rad/s^2
-  float q; ///< in rad/s^2
-  float r; ///< in rad/s^2
+  float p; ///< in rad/s
+  float q; ///< in rad/s
+  float r; ///< in rad/s
 };
 
 #define FLOAT_ANGLE_NORMALIZE(_a) {             \
@@ -129,15 +129,18 @@ struct FloatRates {
 /* _vo = _vi * _s */
 #define FLOAT_VECT2_SMUL(_vo, _vi, _s) VECT2_SMUL(_vo, _vi, _s)
 
-#define FLOAT_VECT2_NORM(n, v) {               \
-    n = sqrtf((v).x*(v).x + (v).y*(v).y);      \
+#define FLOAT_VECT2_NORM2(_v) ((_v).x*(_v).x + (_v).y*(_v).y)
+
+#define FLOAT_VECT2_NORM(_n, _v) {               \
+    _n = sqrtf(FLOAT_VECT2_NORM2(_v));           \
   }
 
 #define FLOAT_VECT2_NORMALIZE(_v) {             \
-    const float n = sqrtf((_v).x*(_v).x + (_v).y*(_v).y);   \
+    const float n = sqrtf(FLOAT_VECT2_NORM2(_v)); \
     FLOAT_VECT2_SMUL(_v, _v, 1./n);             \
   }
 
+#define FLOAT_VECT2_DOT_PRODUCT(_v1, _v2) ((_v1).x*(_v2).x + (_v1).y*(_v2).y)
 
 /*
  * Dimension 3 Vectors
@@ -310,29 +313,29 @@ struct FloatRates {
 
 /* _m_a2c = _m_a2b comp _m_b2c , aka  _m_a2c = _m_b2c * _m_a2b */
 #define FLOAT_RMAT_COMP(_m_a2c, _m_a2b, _m_b2c) {           \
-    _m_a2c.m[0] = (_m_b2c.m[0]*_m_a2b.m[0] + _m_b2c.m[1]*_m_a2b.m[3] + _m_b2c.m[2]*_m_a2b.m[6]); \
-    _m_a2c.m[1] = (_m_b2c.m[0]*_m_a2b.m[1] + _m_b2c.m[1]*_m_a2b.m[4] + _m_b2c.m[2]*_m_a2b.m[7]); \
-    _m_a2c.m[2] = (_m_b2c.m[0]*_m_a2b.m[2] + _m_b2c.m[1]*_m_a2b.m[5] + _m_b2c.m[2]*_m_a2b.m[8]); \
-    _m_a2c.m[3] = (_m_b2c.m[3]*_m_a2b.m[0] + _m_b2c.m[4]*_m_a2b.m[3] + _m_b2c.m[5]*_m_a2b.m[6]); \
-    _m_a2c.m[4] = (_m_b2c.m[3]*_m_a2b.m[1] + _m_b2c.m[4]*_m_a2b.m[4] + _m_b2c.m[5]*_m_a2b.m[7]); \
-    _m_a2c.m[5] = (_m_b2c.m[3]*_m_a2b.m[2] + _m_b2c.m[4]*_m_a2b.m[5] + _m_b2c.m[5]*_m_a2b.m[8]); \
-    _m_a2c.m[6] = (_m_b2c.m[6]*_m_a2b.m[0] + _m_b2c.m[7]*_m_a2b.m[3] + _m_b2c.m[8]*_m_a2b.m[6]); \
-    _m_a2c.m[7] = (_m_b2c.m[6]*_m_a2b.m[1] + _m_b2c.m[7]*_m_a2b.m[4] + _m_b2c.m[8]*_m_a2b.m[7]); \
-    _m_a2c.m[8] = (_m_b2c.m[6]*_m_a2b.m[2] + _m_b2c.m[7]*_m_a2b.m[5] + _m_b2c.m[8]*_m_a2b.m[8]); \
+    _m_a2c.m[0] = ((_m_b2c).m[0]*(_m_a2b).m[0] + (_m_b2c).m[1]*(_m_a2b).m[3] + (_m_b2c).m[2]*(_m_a2b).m[6]); \
+    _m_a2c.m[1] = ((_m_b2c).m[0]*(_m_a2b).m[1] + (_m_b2c).m[1]*(_m_a2b).m[4] + (_m_b2c).m[2]*(_m_a2b).m[7]); \
+    _m_a2c.m[2] = ((_m_b2c).m[0]*(_m_a2b).m[2] + (_m_b2c).m[1]*(_m_a2b).m[5] + (_m_b2c).m[2]*(_m_a2b).m[8]); \
+    _m_a2c.m[3] = ((_m_b2c).m[3]*(_m_a2b).m[0] + (_m_b2c).m[4]*(_m_a2b).m[3] + (_m_b2c).m[5]*(_m_a2b).m[6]); \
+    _m_a2c.m[4] = ((_m_b2c).m[3]*(_m_a2b).m[1] + (_m_b2c).m[4]*(_m_a2b).m[4] + (_m_b2c).m[5]*(_m_a2b).m[7]); \
+    _m_a2c.m[5] = ((_m_b2c).m[3]*(_m_a2b).m[2] + (_m_b2c).m[4]*(_m_a2b).m[5] + (_m_b2c).m[5]*(_m_a2b).m[8]); \
+    _m_a2c.m[6] = ((_m_b2c).m[6]*(_m_a2b).m[0] + (_m_b2c).m[7]*(_m_a2b).m[3] + (_m_b2c).m[8]*(_m_a2b).m[6]); \
+    _m_a2c.m[7] = ((_m_b2c).m[6]*(_m_a2b).m[1] + (_m_b2c).m[7]*(_m_a2b).m[4] + (_m_b2c).m[8]*(_m_a2b).m[7]); \
+    _m_a2c.m[8] = ((_m_b2c).m[6]*(_m_a2b).m[2] + (_m_b2c).m[7]*(_m_a2b).m[5] + (_m_b2c).m[8]*(_m_a2b).m[8]); \
   }
 
 
 /* _m_a2b = _m_a2c comp_inv _m_b2c , aka  _m_a2b = inv(_m_b2c) * _m_a2c */
 #define FLOAT_RMAT_COMP_INV(_m_a2b, _m_a2c, _m_b2c) {           \
-    _m_a2b.m[0] = (_m_b2c.m[0]*_m_a2c.m[0] + _m_b2c.m[3]*_m_a2c.m[3] + _m_b2c.m[6]*_m_a2c.m[6]); \
-    _m_a2b.m[1] = (_m_b2c.m[0]*_m_a2c.m[1] + _m_b2c.m[3]*_m_a2c.m[4] + _m_b2c.m[6]*_m_a2c.m[7]); \
-    _m_a2b.m[2] = (_m_b2c.m[0]*_m_a2c.m[2] + _m_b2c.m[3]*_m_a2c.m[5] + _m_b2c.m[6]*_m_a2c.m[8]); \
-    _m_a2b.m[3] = (_m_b2c.m[1]*_m_a2c.m[0] + _m_b2c.m[4]*_m_a2c.m[3] + _m_b2c.m[7]*_m_a2c.m[6]); \
-    _m_a2b.m[4] = (_m_b2c.m[1]*_m_a2c.m[1] + _m_b2c.m[4]*_m_a2c.m[4] + _m_b2c.m[7]*_m_a2c.m[7]); \
-    _m_a2b.m[5] = (_m_b2c.m[1]*_m_a2c.m[2] + _m_b2c.m[4]*_m_a2c.m[5] + _m_b2c.m[7]*_m_a2c.m[8]); \
-    _m_a2b.m[6] = (_m_b2c.m[2]*_m_a2c.m[0] + _m_b2c.m[5]*_m_a2c.m[3] + _m_b2c.m[8]*_m_a2c.m[6]); \
-    _m_a2b.m[7] = (_m_b2c.m[2]*_m_a2c.m[1] + _m_b2c.m[5]*_m_a2c.m[4] + _m_b2c.m[8]*_m_a2c.m[7]); \
-    _m_a2b.m[8] = (_m_b2c.m[2]*_m_a2c.m[2] + _m_b2c.m[5]*_m_a2c.m[5] + _m_b2c.m[8]*_m_a2c.m[8]); \
+    _m_a2b.m[0] = ((_m_b2c).m[0]*(_m_a2c).m[0] + (_m_b2c).m[3]*(_m_a2c).m[3] + (_m_b2c).m[6]*(_m_a2c).m[6]); \
+    _m_a2b.m[1] = ((_m_b2c).m[0]*(_m_a2c).m[1] + (_m_b2c).m[3]*(_m_a2c).m[4] + (_m_b2c).m[6]*(_m_a2c).m[7]); \
+    _m_a2b.m[2] = ((_m_b2c).m[0]*(_m_a2c).m[2] + (_m_b2c).m[3]*(_m_a2c).m[5] + (_m_b2c).m[6]*(_m_a2c).m[8]); \
+    _m_a2b.m[3] = ((_m_b2c).m[1]*(_m_a2c).m[0] + (_m_b2c).m[4]*(_m_a2c).m[3] + (_m_b2c).m[7]*(_m_a2c).m[6]); \
+    _m_a2b.m[4] = ((_m_b2c).m[1]*(_m_a2c).m[1] + (_m_b2c).m[4]*(_m_a2c).m[4] + (_m_b2c).m[7]*(_m_a2c).m[7]); \
+    _m_a2b.m[5] = ((_m_b2c).m[1]*(_m_a2c).m[2] + (_m_b2c).m[4]*(_m_a2c).m[5] + (_m_b2c).m[7]*(_m_a2c).m[8]); \
+    _m_a2b.m[6] = ((_m_b2c).m[2]*(_m_a2c).m[0] + (_m_b2c).m[5]*(_m_a2c).m[3] + (_m_b2c).m[8]*(_m_a2c).m[6]); \
+    _m_a2b.m[7] = ((_m_b2c).m[2]*(_m_a2c).m[1] + (_m_b2c).m[5]*(_m_a2c).m[4] + (_m_b2c).m[8]*(_m_a2c).m[7]); \
+    _m_a2b.m[8] = ((_m_b2c).m[2]*(_m_a2c).m[2] + (_m_b2c).m[5]*(_m_a2c).m[5] + (_m_b2c).m[8]*(_m_a2c).m[8]); \
   }
 
 
@@ -944,6 +947,127 @@ static inline void float_vect_sdiv(float * o, const float * a, const float s, co
   }
 }
 
+/** ||a|| */
+static inline float float_vect_norm(const float * a, const int n) {
+  int i;
+  float sum = 0;
+  for (i = 0; i < n; i++) { sum += a[i] * a[i]; }
+  return sqrtf(sum);
+}
 
+//
+//
+// Generic matrix algebra
+//
+//
+
+/** Make a pointer to a matrix of _rows lines */
+#define MAKE_MATRIX_PTR(_ptr, _mat, _rows) \
+  float * _ptr[_rows]; \
+  { \
+    int i; \
+    for (i = 0; i < _rows; i++) { _ptr[i] = &_mat[i][0]; } \
+  }
+
+/** a = 0 */
+static inline void float_mat_zero(float ** a, int m, int n) {
+  int i,j;
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) { a[i][j] = 0.; }
+  }
+}
+
+/** a = b */
+static inline void float_mat_copy(float ** a, float ** b, int m, int n) {
+  int i,j;
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) { a[i][j] = b[i][j]; }
+  }
+}
+
+/** o = a + b */
+static inline void float_mat_sum(float ** o, float ** a, float ** b, int m, int n) {
+  int i,j;
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) { o[i][j] = a[i][j] + b[i][j]; }
+  }
+}
+
+/** o = a - b */
+static inline void float_mat_diff(float ** o, float ** a, float ** b, int m, int n) {
+  int i,j;
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) { o[i][j] = a[i][j] - b[i][j]; }
+  }
+}
+
+/** transpose square matrix */
+static inline void float_mat_transpose(float ** a, int n) {
+  int i,j;
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < i; j++) {
+      float t = a[i][j];
+      a[i][j] = a[j][i];
+      a[j][i] = t;
+    }
+  }
+}
+
+/** o = a * b
+ *
+ * a: [m x n]
+ * b: [n x l]
+ * o: [m x l]
+ */
+static inline void float_mat_mul(float ** o, float ** a, float ** b, int m, int n, int l) {
+  int i,j,k;
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < l; j++) {
+      o[i][j] = 0.;
+      for (k = 0; k < n; k++) {
+        o[i][j] += a[i][k] * b[k][j];
+      }
+    }
+  }
+}
+
+/** matrix minor
+ *
+ * a: [m x n]
+ * o: [I(d,d)     0     ]
+ *    [  0    a(d,m:d,n)]
+ */
+static inline void float_mat_minor(float ** o, float ** a, int m, int n, int d) {
+  int i,j;
+  float_mat_zero(o, m, n);
+  for (i = 0; i < d; i++) { o[i][i] = 1.0; }
+  for (i = d; i < m; i++) {
+    for (j = d; j < n; j++) {
+      o[i][j] = a[i][j];
+    }
+  }
+}
+
+/** o = I - v v^T */
+static inline void float_mat_vmul(float ** o, float * v, int n)
+{
+  int i,j;
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
+      o[i][j] = -2. *  v[i] * v[j];
+    }
+  }
+  for (i = 0; i < n; i++) {
+    o[i][i] += 1.;
+  }
+}
+
+/** o = c-th column of matrix a[m x n] */
+static inline void float_mat_col(float * o, float ** a, int m, int c) {
+  int i;
+  for (i = 0; i < m; i++) {
+    o[i] = a[i][c];
+  }
+}
 
 #endif /* PPRZ_ALGEBRA_FLOAT_H */

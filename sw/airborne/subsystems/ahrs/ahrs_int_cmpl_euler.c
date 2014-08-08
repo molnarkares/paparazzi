@@ -74,7 +74,7 @@ static inline void set_body_state_from_euler(void);
     while (_a < -PI_INTEG_EULER)  _a += TWO_PI_INTEG_EULER; \
   }
 
-#if DOWNLINK
+#if PERIODIC_TELEMETRY
 #include "subsystems/datalink/telemetry.h"
 
 static void send_filter(void) {
@@ -117,7 +117,8 @@ void ahrs_init(void) {
   ahrs.status = AHRS_UNINIT;
 
   /* set ltp_to_imu so that body is zero */
-  INT32_EULERS_OF_RMAT(ahrs_impl.ltp_to_imu_euler, imu.body_to_imu_rmat);
+  memcpy(&ahrs_impl.ltp_to_imu_euler, orientationGetEulers_i(&imu.body_to_imu),
+         sizeof(struct Int32Eulers));
   INT_RATES_ZERO(ahrs_impl.imu_rate);
 
   INT_RATES_ZERO(ahrs_impl.gyro_bias);
@@ -125,7 +126,7 @@ void ahrs_init(void) {
 
   ahrs_impl.mag_offset = AHRS_MAG_OFFSET;
 
-#if DOWNLINK
+#if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, "FILTER", send_filter);
   register_periodic_telemetry(DefaultPeriodic, "AHRS_EULER_INT", send_euler);
   register_periodic_telemetry(DefaultPeriodic, "AHRS_GYRO_BIAS_INT", send_bias);
@@ -278,10 +279,6 @@ void ahrs_update_mag(void) {
 
 }
 
-void ahrs_update_gps(void) {
-
-}
-
 /* measures phi and theta assuming no dynamic acceleration ?!! */
 __attribute__ ((always_inline)) static inline void get_phi_theta_measurement_fom_accel(int32_t* phi_meas, int32_t* theta_meas, struct Int32Vect3 accel) {
 
@@ -324,12 +321,13 @@ __attribute__ ((always_inline)) static inline void get_psi_measurement_from_mag(
 }
 
 /* Rotate angles and rates from imu to body frame and set state */
-__attribute__ ((always_inline)) static inline void set_body_state_from_euler(void) {
+static void set_body_state_from_euler(void) {
+  struct Int32RMat *body_to_imu_rmat = orientationGetRMat_i(&imu.body_to_imu);
   struct Int32RMat ltp_to_imu_rmat, ltp_to_body_rmat;
   /* Compute LTP to IMU rotation matrix */
   INT32_RMAT_OF_EULERS(ltp_to_imu_rmat, ahrs_impl.ltp_to_imu_euler);
   /* Compute LTP to BODY rotation matrix */
-  INT32_RMAT_COMP_INV(ltp_to_body_rmat, ltp_to_imu_rmat, imu.body_to_imu_rmat);
+  INT32_RMAT_COMP_INV(ltp_to_body_rmat, ltp_to_imu_rmat, *body_to_imu_rmat);
   /* Set state */
 #ifdef AHRS_UPDATE_FW_ESTIMATOR
   struct Int32Eulers ltp_to_body_euler;
@@ -343,7 +341,7 @@ __attribute__ ((always_inline)) static inline void set_body_state_from_euler(voi
 
   struct Int32Rates body_rate;
   /* compute body rates */
-  INT32_RMAT_TRANSP_RATEMULT(body_rate, imu.body_to_imu_rmat, ahrs_impl.imu_rate);
+  INT32_RMAT_TRANSP_RATEMULT(body_rate, *body_to_imu_rmat, ahrs_impl.imu_rate);
   /* Set state */
   stateSetBodyRates_i(&body_rate);
 

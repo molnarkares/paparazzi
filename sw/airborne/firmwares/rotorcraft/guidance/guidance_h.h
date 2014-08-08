@@ -89,6 +89,7 @@ extern int32_t guidance_h_heading_sp;               ///< with #INT32_ANGLE_FRAC
 extern int32_t guidance_h_pgain;
 extern int32_t guidance_h_dgain;
 extern int32_t guidance_h_igain;
+extern int32_t guidance_h_vgain;
 extern int32_t guidance_h_again;
 
 extern int32_t transition_percentage;
@@ -110,6 +111,10 @@ extern void guidance_h_run(bool_t in_flight);
  */
 #define guidance_h_SetUseRef(_val) {                    \
     guidance_h_use_ref = _val && GUIDANCE_H_USE_REF;    \
+  }
+
+#define guidance_h_SetMaxSpeed(_val) {          \
+    gh_set_max_speed(_val);                     \
   }
 
 #endif /* GUIDANCE_H_H */

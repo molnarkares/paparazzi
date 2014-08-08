@@ -33,9 +33,7 @@
     <!-- Actuators are automatically chosen according to board-->
     <subsystem name="imu"     type="umarim"/>
     <subsystem name="ahrs"    type="float_dcm"/>
-    <subsystem name="ins" type="alt_float">
-      <!--define name="USE_BAROMETER"/-->
-    </subsystem>
+    <subsystem name="ins"     type="alt_float"/>
     <subsystem name="control" type="adaptive"/>
     <subsystem name="navigation"/>
     <!-- Sensors -->
@@ -138,7 +136,6 @@
     <define name="MAXIMUM_AIRSPEED" value="24." unit="m/s"/>
     <define name="CARROT" value="5." unit="s"/>
     <define name="KILL_MODE_DISTANCE" value="(1.5*MAX_DIST_FROM_HOME)"/>
-    <define name="ALT_KALMAN_ENABLED" value="TRUE"/>
     <define name="DEFAULT_CIRCLE_RADIUS" value="80."/>
     <define name="UNLOCKED_HOME_MODE" value="TRUE"/>
     <define name="TELEMETRY_MODE_AP" value="1"/>

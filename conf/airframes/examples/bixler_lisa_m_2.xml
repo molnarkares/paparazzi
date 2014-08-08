@@ -33,6 +33,10 @@
     <subsystem name="ins" type="alt_float"/>
   </firmware>
 
+  <modules>
+    <load name="nav_line.xml"/>
+  </modules>
+
   <!-- commands section -->
   <servos>
     <servo name="THROTTLE"      no="1" min="1120" neutral="1120" max="1920"/>
@@ -96,7 +100,6 @@
     <define name="NOMINAL_AIRSPEED" value="15." unit="m/s"/>
     <define name="CARROT" value="4." unit="s"/>
     <define name="KILL_MODE_DISTANCE" value="(2.0*MAX_DIST_FROM_HOME)"/>
-    <define name="ALT_KALMAN_ENABLED" value="TRUE"/>
     <define name="DEFAULT_CIRCLE_RADIUS" value="100."/>
   </section>
 

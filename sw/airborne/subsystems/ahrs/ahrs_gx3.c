@@ -91,7 +91,7 @@ void ahrs_align(void) {
   ahrs_impl.gx3_status = GX3Running;
 }
 
-#if DOWNLINK
+#if PERIODIC_TELEMETRY
 #include "subsystems/datalink/telemetry.h"
 
 static send_gx3(void) {
@@ -213,7 +213,7 @@ void imu_impl_init(void) {
 #endif
   ahrs.status = AHRS_RUNNING;
 
-#if DOWNLINK
+#if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, "GX3_INFO", send_gx3);
 #endif
 }
@@ -258,13 +258,14 @@ void gx3_packet_read_message(void) {
   struct FloatRates body_rate;
   imuf.gyro = ahrs_impl.gx3_rate;
   /* compute body rates */
-  FLOAT_RMAT_TRANSP_RATEMULT(body_rate, imuf.body_to_imu_rmat, imuf.gyro);
+  struct FloatRMat *body_to_imu_rmat = orientationGetRMat_f(&imuf.body_to_imu);
+  FLOAT_RMAT_TRANSP_RATEMULT(body_rate, *body_to_imu_rmat, imuf.gyro);
   /* Set state */
   stateSetBodyRates_f(&body_rate);
 
   // Attitude
   struct FloatRMat ltp_to_body_rmat;
-  FLOAT_RMAT_COMP(ltp_to_body_rmat, ahrs_impl.gx3_rmat, imuf.body_to_imu_rmat);
+  FLOAT_RMAT_COMP(ltp_to_body_rmat, ahrs_impl.gx3_rmat, *body_to_imu_rmat);
 #ifdef AHRS_UPDATE_FW_ESTIMATOR // fixedwing
   struct FloatEulers ltp_to_body_eulers;
   FLOAT_EULERS_OF_RMAT(ltp_to_body_eulers, ltp_to_body_rmat);
@@ -327,7 +328,8 @@ void gx3_packet_parse( uint8_t c ) {
 void ahrs_init(void) {
   ahrs.status = AHRS_UNINIT;
   /* set ltp_to_imu so that body is zero */
-  QUAT_COPY(ahrs_impl.ltp_to_imu_quat, imuf.body_to_imu_quat);
+  struct FloatQuat *body_to_imu_quat = orientationGetQuat_f(&imuf.body_to_imu);
+  QUAT_COPY(ahrs_impl.ltp_to_imu_quat, *body_to_imu_quat);
 #ifdef IMU_MAG_OFFSET
   ahrs_impl.mag_offset = IMU_MAG_OFFSET;
 #else
@@ -347,14 +349,3 @@ void ahrs_aligner_run(void) {
 void ahrs_aligner_init(void) {
 }
 
-void ahrs_propagate(void) {
-}
-
-void ahrs_update_accel(void) {
-}
-
-void ahrs_update_mag(void) {
-}
-
-void ahrs_update_gps(void) {
-}
